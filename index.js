@@ -1,6 +1,6 @@
 function updateMap(){
 console.log("this is map")
-fetch("/car_location.json")
+fetch("car_location.json")
 .then(response => response.json())
 .then(rsp => {
 console.log(rsp.car_brands);
