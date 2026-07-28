@@ -1,42 +1,762 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Car Brand And Their Location</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Explore global car brand headquarters on an interactive world map. Discover where iconic automotive brands like Ferrari, BMW, Tesla and more are based." />
+  <title>Car Brand HQ Locator — World Map</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-      #map {position: absolute; top: 0; right: 0; bottom: 0; left: 0;}
-  </style>
-  <style>
-    .mapboxgl-popup {
-      max-width: 400px;
-      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    }
-  </style>
-  <script src="https://cdn.maptiler.com/maptiler-geocoding-control/v1.3.3/leaflet.umd.js"></script>
-  <link href="https://cdn.maptiler.com/maptiler-geocoding-control/v1.3.3/style.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.9/dist/leaflet-search.min.css">
 
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-search@3.0.9/dist/leaflet-search.min.js"></script>
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg-base:        #0a0c12;
+      --bg-sidebar:     #0d0f18;
+      --bg-card:        rgba(255,255,255,0.04);
+      --bg-card-hover:  rgba(255,255,255,0.08);
+      --bg-glass:       rgba(13,15,24,0.82);
+      --border:         rgba(255,255,255,0.08);
+      --border-accent:  rgba(99,179,255,0.35);
+      --accent:         #63b3ff;
+      --accent-glow:    rgba(99,179,255,0.18);
+      --accent2:        #a78bfa;
+      --accent2-glow:   rgba(167,139,250,0.18);
+      --text-primary:   #f0f4ff;
+      --text-secondary: #8892a4;
+      --text-muted:     #4b5568;
+      --shadow-card:    0 4px 24px rgba(0,0,0,0.4);
+      --shadow-glow:    0 0 24px rgba(99,179,255,0.15);
+      --transition:     0.22s cubic-bezier(0.4,0,0.2,1);
+      --sidebar-w:      320px;
+      --radius-sm:      8px;
+      --radius-md:      12px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+    }
+
+    /* ============================================================
+       LAYOUT SHELL
+    ============================================================ */
+    #app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    #sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      height: 100%;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      position: relative;
+    }
+
+    #sidebar-header {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(99,179,255,0.35);
+    }
+
+    .logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-left: 46px;
+    }
+
+    /* --- Sidebar Search --- */
+    #sidebar-search-wrap {
+      padding: 14px 16px 0;
+      flex-shrink: 0;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 13.5px;
+      font-weight: 400;
+      padding: 9px 36px 9px 36px;
+      outline: none;
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+    }
+
+    .search-box input::placeholder { color: var(--text-muted); }
+
+    .search-box input:focus {
+      border-color: var(--border-accent);
+      background: rgba(99,179,255,0.06);
+      box-shadow: 0 0 0 3px rgba(99,179,255,0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity var(--transition), color var(--transition);
+    }
+
+    .search-clear.visible { opacity: 1; }
+    .search-clear:hover { color: var(--text-primary); }
+
+    /* --- Stats Bar --- */
+    #stats-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px 10px;
+      flex-shrink: 0;
+    }
+
+    .stat-pill {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .stat-pill .val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-pill .lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    /* --- Brand List --- */
+    #brand-list-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 10px 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    #brand-list-wrap::-webkit-scrollbar { width: 4px; }
+    #brand-list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .brand-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all var(--transition);
+      margin-bottom: 2px;
+    }
+
+    .brand-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border);
+    }
+
+    .brand-item.active {
+      background: rgba(99,179,255,0.1);
+      border-color: var(--border-accent);
+    }
+
+    .brand-item.hidden { display: none; }
+
+    .brand-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-glow), var(--accent2-glow));
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-item.active .brand-avatar {
+      background: linear-gradient(135deg, rgba(99,179,255,0.25), rgba(167,139,250,0.25));
+      border-color: var(--border-accent);
+    }
+
+    .brand-info { flex: 1; min-width: 0; }
+
+    .brand-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-hq {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .brand-arrow {
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: color var(--transition), transform var(--transition);
+    }
+
+    .brand-item:hover .brand-arrow,
+    .brand-item.active .brand-arrow {
+      color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+      display: none;
+    }
+
+    /* ============================================================
+       MAP CONTAINER
+    ============================================================ */
+    #map-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ============================================================
+       TOP BAR GRADIENT
+    ============================================================ */
+    #topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: linear-gradient(180deg, rgba(10,12,18,0.75) 0%, transparent 100%);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 20px;
+      z-index: 500;
+      pointer-events: none;
+    }
+
+    .map-hint {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      background: rgba(13,15,24,0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* ============================================================
+       LEAFLET POPUP — glassmorphism override
+    ============================================================ */
+    .leaflet-popup-content-wrapper {
+      background: rgba(13,15,24,0.88) !important;
+      backdrop-filter: blur(22px) !important;
+      -webkit-backdrop-filter: blur(22px) !important;
+      border: 1px solid rgba(99,179,255,0.3) !important;
+      border-radius: var(--radius-md) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(99,179,255,0.12) !important;
+      padding: 0 !important;
+      color: var(--text-primary) !important;
+      font-family: 'Outfit', sans-serif !important;
+      overflow: hidden !important;
+    }
+
+    .leaflet-popup-content { margin: 0 !important; width: auto !important; }
+
+    .leaflet-popup-tip-container { display: none !important; }
+
+    .leaflet-popup-close-button {
+      color: var(--text-secondary) !important;
+      font-size: 18px !important;
+      top: 10px !important;
+      right: 12px !important;
+    }
+
+    .leaflet-popup-close-button:hover { color: var(--text-primary) !important; }
+
+    .popup-inner {
+      padding: 18px 20px 16px;
+      min-width: 220px;
+    }
+
+    .popup-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99,179,255,0.12);
+      border: 1px solid rgba(99,179,255,0.25);
+      border-radius: 20px;
+      padding: 3px 10px 3px 6px;
+      margin-bottom: 10px;
+    }
+
+    .popup-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    .popup-badge span {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .popup-brand-name {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .popup-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .popup-row-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+
+    .popup-row-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--text-muted);
+      margin-bottom: 1px;
+    }
+
+    .popup-row-value {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .popup-coords {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ============================================================
+       CUSTOM MAP MARKERS
+    ============================================================ */
+    .custom-marker-wrap {
+      position: relative;
+      width: 36px;
+      height: 44px;
+    }
+
+    .marker-pin {
+      width: 28px;
+      height: 28px;
+      border-radius: 50% 50% 50% 0;
+      background: linear-gradient(135deg, #63b3ff, #a78bfa);
+      transform: rotate(-45deg);
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 3px 14px rgba(99,179,255,0.5);
+      position: absolute;
+      top: 0;
+      left: 4px;
+    }
+
+    .marker-initials {
+      position: absolute;
+      top: 5px;
+      left: 4px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      pointer-events: none;
+    }
+
+    .marker-pulse {
+      position: absolute;
+      top: 0;
+      left: 4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(99,179,255,0.2);
+      animation: markerPulse 2.5s ease-out infinite;
+    }
+
+    @keyframes markerPulse {
+      0%   { transform: scale(0.8); opacity: 0.8; }
+      70%  { transform: scale(2.2); opacity: 0; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+
+    .marker-active .marker-pin {
+      background: linear-gradient(135deg, #fbbf24, #f87171);
+      box-shadow: 0 3px 14px rgba(251,191,36,0.7);
+    }
+
+    .marker-active .marker-pulse {
+      background: rgba(251,191,36,0.2);
+    }
+
+    /* ============================================================
+       LEAFLET CONTROLS OVERRIDE
+    ============================================================ */
+    .leaflet-control-zoom {
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-sm) !important;
+      overflow: hidden;
+      box-shadow: var(--shadow-card) !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: rgba(13,15,24,0.82) !important;
+      backdrop-filter: blur(12px) !important;
+      color: var(--text-primary) !important;
+      border-bottom: 1px solid var(--border) !important;
+      width: 32px !important;
+      height: 32px !important;
+      line-height: 32px !important;
+      font-size: 16px !important;
+      transition: background var(--transition) !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: rgba(99,179,255,0.15) !important;
+      color: var(--accent) !important;
+    }
+
+    .leaflet-bar { border: none !important; }
+
+    .leaflet-control-search {
+      background: rgba(13,15,24,0.82) !important;
+      backdrop-filter: blur(12px) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-sm) !important;
+      box-shadow: var(--shadow-card) !important;
+    }
+
+    .leaflet-control-search .search-input {
+      background: transparent !important;
+      color: var(--text-primary) !important;
+      font-family: 'Outfit', sans-serif !important;
+      font-size: 13px !important;
+    }
+
+    .search-tooltip {
+      background: rgba(13,15,24,0.92) !important;
+      backdrop-filter: blur(12px) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text-primary) !important;
+      font-family: 'Outfit', sans-serif !important;
+    }
+
+    /* ============================================================
+       MOBILE HAMBURGER
+    ============================================================ */
+    #sidebar-toggle {
+      display: none;
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 600;
+      background: rgba(13,15,24,0.82);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text-primary);
+      transition: background var(--transition);
+    }
+
+    #sidebar-toggle:hover { background: rgba(99,179,255,0.1); color: var(--accent); }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 700px) {
+      #sidebar {
+        position: absolute;
+        top: 0; left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+        z-index: 700;
+      }
+
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-toggle { display: flex; }
+      #map-container { width: 100%; }
+    }
+
+    /* ============================================================
+       LOADING OVERLAY
+    ============================================================ */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-base);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .loading-brand {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    /* ============================================================
+       ATTRIBUTION
+    ============================================================ */
+    #attribution-custom {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      z-index: 600;
+      font-size: 10.5px;
+      color: rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+
+    #attribution-custom a {
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      pointer-events: all;
+    }
+
+    #attribution-custom a:hover { color: var(--accent); }
+  </style>
 </head>
 <body>
-  <div id="map">
-      <a href="https://www.maptiler.com" style="position:absolute;left:10px;bottom:10px;z-index:999;"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo"></a>
+  <!-- Loading Screen -->
+  <div id="loading-overlay">
+    <div class="loading-brand">🚗 AutoGlobe</div>
+    <div class="spinner"></div>
+    <p class="loading-text">Loading car brand map…</p>
   </div>
-    <p><a href="https://www.maptiler.com/copyright/" target="_blank" rel="noopener">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">&copy; OpenStreetMap contributors</a></p>
-  <script>
-    const key = 'ru7M28Ag1JcyseRwSrac';
-    const map = L.map('map').setView([0, 0], 1); //starting position
-      L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${key}`,{ //style URL
-      tileSize: 512,
-      zoomOffset: -1,
-      minZoom: 1,
-      attribution: "\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e",
-      crossOrigin: true
-    }).addTo(map);
 
-  </script>
+  <div id="app">
+    <!-- ======== SIDEBAR ======== -->
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <div class="logo-row">
+          <div class="logo-icon">🚗</div>
+          <span class="logo-text">AutoGlobe</span>
+        </div>
+        <p class="logo-sub">Car Brand HQ Locator</p>
+      </div>
+
+      <div id="sidebar-search-wrap">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            id="brand-search"
+            type="text"
+            placeholder="Search car brand…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="search-clear" id="search-clear-btn" title="Clear search">✕</button>
+        </div>
+      </div>
+
+      <div id="stats-bar">
+        <div class="stat-pill">
+          <div class="val" id="stat-total">—</div>
+          <div class="lbl">Brands</div>
+        </div>
+        <div class="stat-pill">
+          <div class="val" id="stat-countries">—</div>
+          <div class="lbl">Countries</div>
+        </div>
+        <div class="stat-pill">
+          <div class="val" id="stat-shown">—</div>
+          <div class="lbl">Shown</div>
+        </div>
+      </div>
+
+      <div id="brand-list-wrap">
+        <div id="brand-list"></div>
+        <div class="no-results" id="no-results">No brands found</div>
+      </div>
+    </aside>
+
+    <!-- ======== MAP PANEL ======== -->
+    <div id="map-container">
+      <!-- Mobile Toggle -->
+      <button id="sidebar-toggle" title="Toggle sidebar">☰</button>
+
+      <div id="map"></div>
+
+      <div id="attribution-custom">
+        <a href="https://www.maptiler.com/copyright/" target="_blank" rel="noopener">© MapTiler</a>
+        &nbsp;·&nbsp;
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
 </body>
-<script src="index.js"></script>
 </html>
