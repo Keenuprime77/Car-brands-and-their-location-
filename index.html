@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="description" content="Explore global car brand headquarters on an interactive world map. Discover where iconic automotive brands like Ferrari, BMW, Tesla and more are based." />
+  <meta name="description"
+    content="Explore global car brand headquarters on an interactive world map. Discover where iconic automotive brands like Ferrari, BMW, Tesla and more are based." />
   <title>Car Brand HQ Locator — World Map</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -24,34 +27,41 @@
        DESIGN TOKENS
     ============================================================ */
     :root {
-      --bg-base:        #0a0c12;
-      --bg-sidebar:     #0d0f18;
-      --bg-card:        rgba(255,255,255,0.04);
-      --bg-card-hover:  rgba(255,255,255,0.08);
-      --bg-glass:       rgba(13,15,24,0.82);
-      --border:         rgba(255,255,255,0.08);
-      --border-accent:  rgba(99,179,255,0.35);
-      --accent:         #63b3ff;
-      --accent-glow:    rgba(99,179,255,0.18);
-      --accent2:        #a78bfa;
-      --accent2-glow:   rgba(167,139,250,0.18);
-      --text-primary:   #f0f4ff;
+      --bg-base: #0a0c12;
+      --bg-sidebar: #0d0f18;
+      --bg-card: rgba(255, 255, 255, 0.04);
+      --bg-card-hover: rgba(255, 255, 255, 0.08);
+      --bg-glass: rgba(13, 15, 24, 0.82);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 179, 255, 0.35);
+      --accent: #63b3ff;
+      --accent-glow: rgba(99, 179, 255, 0.18);
+      --accent2: #a78bfa;
+      --accent2-glow: rgba(167, 139, 250, 0.18);
+      --text-primary: #f0f4ff;
       --text-secondary: #8892a4;
-      --text-muted:     #4b5568;
-      --shadow-card:    0 4px 24px rgba(0,0,0,0.4);
-      --shadow-glow:    0 0 24px rgba(99,179,255,0.15);
-      --transition:     0.22s cubic-bezier(0.4,0,0.2,1);
-      --sidebar-w:      320px;
-      --radius-sm:      8px;
-      --radius-md:      12px;
+      --text-muted: #4b5568;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 24px rgba(99, 179, 255, 0.15);
+      --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      --sidebar-w: 320px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
     }
 
     /* ============================================================
        RESET & BASE
     ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body {
+    html,
+    body {
       height: 100%;
       width: 100%;
       overflow: hidden;
@@ -74,7 +84,6 @@
     ============================================================ */
     #sidebar {
       width: var(--sidebar-w);
-      min-width: var(--sidebar-w);
       height: 100%;
       background: var(--bg-sidebar);
       border-right: 1px solid var(--border);
@@ -82,6 +91,9 @@
       flex-direction: column;
       z-index: 100;
       position: relative;
+      min-width: 100px;
+      max-width: 500px;
+      flex: 0 0 auto;
     }
 
     #sidebar-header {
@@ -89,6 +101,21 @@
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
+
+
+    #sidebar {}
+
+    #resizer {
+      width: 6px;
+      cursor: col-resize;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    #resizer:hover {
+      background: rgba(255, 255, 255, .12);
+    }
+
 
     .logo-row {
       display: flex;
@@ -107,7 +134,7 @@
       justify-content: center;
       font-size: 18px;
       flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba(99,179,255,0.35);
+      box-shadow: 0 4px 14px rgba(99, 179, 255, 0.35);
     }
 
     .logo-text {
@@ -153,12 +180,14 @@
       transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
     }
 
-    .search-box input::placeholder { color: var(--text-muted); }
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
 
     .search-box input:focus {
       border-color: var(--border-accent);
-      background: rgba(99,179,255,0.06);
-      box-shadow: 0 0 0 3px rgba(99,179,255,0.1);
+      background: rgba(99, 179, 255, 0.06);
+      box-shadow: 0 0 0 3px rgba(99, 179, 255, 0.1);
     }
 
     .search-icon {
@@ -187,8 +216,13 @@
       transition: opacity var(--transition), color var(--transition);
     }
 
-    .search-clear.visible { opacity: 1; }
-    .search-clear:hover { color: var(--text-primary); }
+    .search-clear.visible {
+      opacity: 1;
+    }
+
+    .search-clear:hover {
+      color: var(--text-primary);
+    }
 
     /* --- Stats Bar --- */
     #stats-bar {
@@ -231,8 +265,14 @@
       scrollbar-color: var(--border) transparent;
     }
 
-    #brand-list-wrap::-webkit-scrollbar { width: 4px; }
-    #brand-list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    #brand-list-wrap::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #brand-list-wrap::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
 
     .brand-item {
       display: flex;
@@ -252,11 +292,13 @@
     }
 
     .brand-item.active {
-      background: rgba(99,179,255,0.1);
+      background: rgba(99, 179, 255, 0.1);
       border-color: var(--border-accent);
     }
 
-    .brand-item.hidden { display: none; }
+    .brand-item.hidden {
+      display: none;
+    }
 
     .brand-avatar {
       width: 34px;
@@ -275,11 +317,14 @@
     }
 
     .brand-item.active .brand-avatar {
-      background: linear-gradient(135deg, rgba(99,179,255,0.25), rgba(167,139,250,0.25));
+      background: linear-gradient(135deg, rgba(99, 179, 255, 0.25), rgba(167, 139, 250, 0.25));
       border-color: var(--border-accent);
     }
 
-    .brand-info { flex: 1; min-width: 0; }
+    .brand-info {
+      flex: 1;
+      min-width: 0;
+    }
 
     .brand-name {
       font-size: 13.5px;
@@ -343,7 +388,7 @@
       left: 0;
       right: 0;
       height: 64px;
-      background: linear-gradient(180deg, rgba(10,12,18,0.75) 0%, transparent 100%);
+      background: linear-gradient(180deg, rgba(10, 12, 18, 0.75) 0%, transparent 100%);
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -355,8 +400,8 @@
     .map-hint {
       font-size: 12px;
       font-weight: 500;
-      color: rgba(255,255,255,0.4);
-      background: rgba(13,15,24,0.6);
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(13, 15, 24, 0.6);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       padding: 5px 12px;
@@ -367,21 +412,26 @@
        LEAFLET POPUP — glassmorphism override
     ============================================================ */
     .leaflet-popup-content-wrapper {
-      background: rgba(13,15,24,0.88) !important;
+      background: rgba(13, 15, 24, 0.88) !important;
       backdrop-filter: blur(22px) !important;
       -webkit-backdrop-filter: blur(22px) !important;
-      border: 1px solid rgba(99,179,255,0.3) !important;
+      border: 1px solid rgba(99, 179, 255, 0.3) !important;
       border-radius: var(--radius-md) !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(99,179,255,0.12) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(99, 179, 255, 0.12) !important;
       padding: 0 !important;
       color: var(--text-primary) !important;
       font-family: 'Outfit', sans-serif !important;
       overflow: hidden !important;
     }
 
-    .leaflet-popup-content { margin: 0 !important; width: auto !important; }
+    .leaflet-popup-content {
+      margin: 0 !important;
+      width: auto !important;
+    }
 
-    .leaflet-popup-tip-container { display: none !important; }
+    .leaflet-popup-tip-container {
+      display: none !important;
+    }
 
     .leaflet-popup-close-button {
       color: var(--text-secondary) !important;
@@ -390,7 +440,9 @@
       right: 12px !important;
     }
 
-    .leaflet-popup-close-button:hover { color: var(--text-primary) !important; }
+    .leaflet-popup-close-button:hover {
+      color: var(--text-primary) !important;
+    }
 
     .popup-inner {
       padding: 18px 20px 16px;
@@ -401,8 +453,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(99,179,255,0.12);
-      border: 1px solid rgba(99,179,255,0.25);
+      background: rgba(99, 179, 255, 0.12);
+      border: 1px solid rgba(99, 179, 255, 0.25);
       border-radius: 20px;
       padding: 3px 10px 3px 6px;
       margin-bottom: 10px;
@@ -439,7 +491,11 @@
       margin-bottom: 7px;
     }
 
-    .popup-row-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+    .popup-row-icon {
+      font-size: 14px;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
 
     .popup-row-label {
       font-size: 10px;
@@ -477,8 +533,8 @@
       border-radius: 50% 50% 50% 0;
       background: linear-gradient(135deg, #63b3ff, #a78bfa);
       transform: rotate(-45deg);
-      border: 2px solid rgba(255,255,255,0.2);
-      box-shadow: 0 3px 14px rgba(99,179,255,0.5);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 3px 14px rgba(99, 179, 255, 0.5);
       position: absolute;
       top: 0;
       left: 4px;
@@ -507,23 +563,34 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: rgba(99,179,255,0.2);
+      background: rgba(99, 179, 255, 0.2);
       animation: markerPulse 2.5s ease-out infinite;
     }
 
     @keyframes markerPulse {
-      0%   { transform: scale(0.8); opacity: 0.8; }
-      70%  { transform: scale(2.2); opacity: 0; }
-      100% { transform: scale(0.8); opacity: 0; }
+      0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+      }
+
+      70% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
     }
 
     .marker-active .marker-pin {
       background: linear-gradient(135deg, #fbbf24, #f87171);
-      box-shadow: 0 3px 14px rgba(251,191,36,0.7);
+      box-shadow: 0 3px 14px rgba(251, 191, 36, 0.7);
     }
 
     .marker-active .marker-pulse {
-      background: rgba(251,191,36,0.2);
+      background: rgba(251, 191, 36, 0.2);
     }
 
     /* ============================================================
@@ -537,7 +604,7 @@
     }
 
     .leaflet-control-zoom a {
-      background: rgba(13,15,24,0.82) !important;
+      background: rgba(13, 15, 24, 0.82) !important;
       backdrop-filter: blur(12px) !important;
       color: var(--text-primary) !important;
       border-bottom: 1px solid var(--border) !important;
@@ -549,14 +616,16 @@
     }
 
     .leaflet-control-zoom a:hover {
-      background: rgba(99,179,255,0.15) !important;
+      background: rgba(99, 179, 255, 0.15) !important;
       color: var(--accent) !important;
     }
 
-    .leaflet-bar { border: none !important; }
+    .leaflet-bar {
+      border: none !important;
+    }
 
     .leaflet-control-search {
-      background: rgba(13,15,24,0.82) !important;
+      background: rgba(13, 15, 24, 0.82) !important;
       backdrop-filter: blur(12px) !important;
       border: 1px solid var(--border) !important;
       border-radius: var(--radius-sm) !important;
@@ -571,7 +640,7 @@
     }
 
     .search-tooltip {
-      background: rgba(13,15,24,0.92) !important;
+      background: rgba(13, 15, 24, 0.92) !important;
       backdrop-filter: blur(12px) !important;
       border: 1px solid var(--border) !important;
       color: var(--text-primary) !important;
@@ -587,7 +656,7 @@
       top: 14px;
       left: 14px;
       z-index: 600;
-      background: rgba(13,15,24,0.82);
+      background: rgba(13, 15, 24, 0.82);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -601,7 +670,10 @@
       transition: background var(--transition);
     }
 
-    #sidebar-toggle:hover { background: rgba(99,179,255,0.1); color: var(--accent); }
+    #sidebar-toggle:hover {
+      background: rgba(99, 179, 255, 0.1);
+      color: var(--accent);
+    }
 
     /* ============================================================
        RESPONSIVE
@@ -609,16 +681,25 @@
     @media (max-width: 700px) {
       #sidebar {
         position: absolute;
-        top: 0; left: 0;
+        top: 0;
+        left: 0;
         height: 100%;
         transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 700;
       }
 
-      #sidebar.open { transform: translateX(0); }
-      #sidebar-toggle { display: flex; }
-      #map-container { width: 100%; }
+      #sidebar.open {
+        transform: translateX(0);
+      }
+
+      #sidebar-toggle {
+        display: flex;
+      }
+
+      #map-container {
+        width: 100%;
+      }
     }
 
     /* ============================================================
@@ -636,7 +717,10 @@
       transition: opacity 0.5s ease;
     }
 
-    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
 
     .spinner {
       width: 44px;
@@ -648,7 +732,11 @@
       margin-bottom: 16px;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     .loading-text {
       font-size: 14px;
@@ -675,19 +763,22 @@
       right: 10px;
       z-index: 600;
       font-size: 10.5px;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255, 255, 255, 0.3);
       pointer-events: none;
     }
 
     #attribution-custom a {
-      color: rgba(255,255,255,0.4);
+      color: rgba(255, 255, 255, 0.4);
       text-decoration: none;
       pointer-events: all;
     }
 
-    #attribution-custom a:hover { color: var(--accent); }
+    #attribution-custom a:hover {
+      color: var(--accent);
+    }
   </style>
 </head>
+
 <body>
   <!-- Loading Screen -->
   <div id="loading-overlay">
@@ -699,6 +790,8 @@
   <div id="app">
     <!-- ======== SIDEBAR ======== -->
     <aside id="sidebar">
+
+
       <div id="sidebar-header">
         <div class="logo-row">
           <div class="logo-icon">🚗</div>
@@ -710,13 +803,7 @@
       <div id="sidebar-search-wrap">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input
-            id="brand-search"
-            type="text"
-            placeholder="Search car brand…"
-            autocomplete="off"
-            spellcheck="false"
-          />
+          <input id="brand-search" type="text" placeholder="Search car brand…" autocomplete="off" spellcheck="false" />
           <button class="search-clear" id="search-clear-btn" title="Clear search">✕</button>
         </div>
       </div>
@@ -741,6 +828,8 @@
         <div class="no-results" id="no-results">No brands found</div>
       </div>
     </aside>
+    <div id="resizer"></div>
+    <div id="map"></div>
 
     <!-- ======== MAP PANEL ======== -->
     <div id="map-container">
@@ -759,4 +848,5 @@
 
   <script src="index.js"></script>
 </body>
+
 </html>

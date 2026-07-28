@@ -8,7 +8,7 @@ const MAPTILER_KEY = 'ru7M28Ag1JcyseRwSrac';
 
 const map = L.map('map', {
   center: [25, 15],
-  zoom: 2,
+  zoom: 3,
   zoomControl: false,
   attributionControl: false
 });
@@ -188,6 +188,34 @@ function updateStats(brands) {
   document.getElementById('stat-countries').textContent = countUniqueCountries(brands);
   document.getElementById('stat-shown').textContent    = brands.length;
 }
+
+const sidebar = document.getElementById("sidebar");
+const resizer = document.getElementById("resizer");
+
+let isResizing = false;
+
+resizer.addEventListener("mousedown", () => {
+  isResizing = true;
+  document.body.style.cursor = "col-resize";
+  document.body.style.userSelect = "none";
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isResizing) return;
+
+  const width = e.clientX;
+
+  if (width >= 100 && width <= 500) {
+    sidebar.style.width = `${width}px`;
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  isResizing = false;
+  document.body.style.cursor = "";
+  document.body.style.userSelect = "";
+});
+
 
 // ── Main: Load & Render ────────────────────────────────────
 function updateMap() {
